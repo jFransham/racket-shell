@@ -121,15 +121,23 @@ define (pipe . procs)
         (#:input  [in  #f]
          #:output [out #f]
          #:err    [err #f])
-        let*-values ([(head-shell) (head #:input in #:err err)])
-          begin
-            (apply pipe tail) #:input (shell-out head-shell) #:output out #:err err
+        let-values ([(head-shell) (head #:input in #:err err)])
+          (apply pipe tail) #:input (shell-out head-shell) #:output out #:err err
+
+define (shell->string proc)
+  letrec
+    \\
+      shl      (proc)
+      in-prt   (shell-out shl)
+    begin
+      subprocess-wait (shell-process shl)
+      port->string    in-prt
 
 require-executable ls cat
 
 define ls-clt #{ls "-clt"}
 
-output
+shell->string
   pipe
     ls-clt "."
     cat "-"
